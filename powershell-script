@@ -1,0 +1,31 @@
+
+$test = (aws s3api list-buckets --query "Buckets[].Name").split(""" ")
+$awsList = @()
+
+foreach ($tesq in $test) {
+     $tes1 = $tesq.replace(',','')
+     $test2 = $tes1.replace('[','')
+     $tes = $test2.replace(']','')
+   	#if ($tes -and $tes -ne "bucketname1" -and $tes  -ne "bucketname2" -and $tes  -ne "bucketname3" -and $tes -ne "bucketname4") {
+	
+	$owner = aws s3api get-bucket-acl --bucket $tes --query "Owner.DisplayName"
+	$size = aws s3api list-objects --bucket $tes --output json --query "[sum(Contents[].Size)]"  | ConvertFrom-Json
+	
+       
+    $result =  [PSCustomObject]@{
+	BucketNAme = $tes
+	BucketSize = $size
+	BucketOwner = $owner.replace('"','')
+    } 
+     
+    $awsList += $result 
+
+
+       
+    $output = $tes + "," + $size + "," + $owner.replace('"','')
+	Write-Output ($output)
+
+	}
+} 
+ 
+$awsList | Export-Csv -Path C:\path-to-your-csv-file\final.csv
